@@ -1,13 +1,12 @@
 # photoeditorapp
 사진 편집 유로기능에 지쳐서 만든앱
 
-좋아, DSLR 기능을 가진 사진 편집 앱이라면 기능, 기술 스택, 설치 방법, 스크린샷, 라이선스 등 포함한 꽤 탄탄한 `README.md` 구성이 필요하겠네. 우선 기본적으로 이런 느낌으로 시작해볼 수 있어:
 
 ---
 
 ### ✅ DSLR 사진 편집 앱 - Kotlin 기반 Android 프로젝트
 
-```markdown
+
 # DSLR Photo Editor 📷✨  
 고급 DSLR 기능을 제공하는 Android 사진 편집 앱입니다. Kotlin으로 구성되었으며, 심도 효과, 색보정, 후보정 필터, 자동 인물 인식 등 DSLR급 편집 기능을 제공합니다.
 
@@ -53,7 +52,7 @@ Android Studio로 열어 에뮬레이터 또는 실제 기기에서 실행할 �
  ┣ 📂core
  ┣ 📄build.gradle
  ┗ 📄README.md
-```
+
 
 ## 📄 라이선스  
 [MIT License](LICENSE)
