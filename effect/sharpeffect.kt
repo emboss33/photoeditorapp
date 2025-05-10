@@ -61,3 +61,168 @@
             // clipped는 위에서 복사한 값이고 반환에 포함되지 않으므로 release 생략 가능
         }
     } 
+
+
+//적용해볼 방법 
+1.강화 //효과 미비 
+applyDetailSharpening() 강화 버전 
+Core.multiply(detailMask, Scalar(2.0, 2.0, 2.0), detailMask) // 마스크 2배 강화
+
+2.고주파 마스킹 기법  //효과 미비
+val laplacian = Mat()
+Imgproc.Laplacian(bgr, laplacian, bgr.depth(), 3)
+
+// Laplacian 강조
+val lapSharpened = Mat()
+Core.addWeighted(bgr, 1.0, laplacian, 0.4, 0.0, lapSharpened)
+
+
+3.laplacian 만 사용 // 선명도가 떨어짐 , 눈,눈썹,얼굴등에 선명도
+
+fun applyLightLaplacianSharpen(bitmap: Bitmap): Bitmap {
+    val src = Mat()
+    Utils.bitmapToMat(bitmap, src) // RGBA
+
+    val bgr = Mat()
+    Imgproc.cvtColor(src, bgr, Imgproc.COLOR_RGBA2BGR) // RGB만 추출
+
+    val laplacian = Mat()
+    Imgproc.Laplacian(bgr, laplacian, bgr.depth(), 3)
+
+    val sharpened = Mat()
+    Core.addWeighted(bgr, 1.0, laplacian, 0.5, 0.0, sharpened) // 💡 라플라시안만 사용
+
+    val clipped = clipRGBRange(sharpened)
+
+    val rgba = Mat()
+    Imgproc.cvtColor(clipped, rgba, Imgproc.COLOR_BGR2RGBA)
+
+    val result = Bitmap.createBitmap(rgba.cols(), rgba.rows(), Bitmap.Config.ARGB_8888)
+    Utils.matToBitmap(rgba, result)
+
+    // 메모리 해제
+    src.release()
+    bgr.release()
+    laplacian.release()
+    sharpened.release()
+    clipped.release()
+    rgba.release()
+
+    return result
+}
+
+4.채널수를 늘려서 사용
+
+fun applyLaplacianSharpenSafe(src: Mat, strength: Double = 0.5): Mat {
+    val tag = "SharpEffectProcessor"
+
+    val bgr = Mat()
+    val temp = Mat()
+    val laplacian = Mat()
+    val sharpened = Mat()
+    val clipped: Mat
+    val result = Mat()
+
+    try {
+        // 1. RGBA → BGR 변환
+        Imgproc.cvtColor(src, bgr, Imgproc.COLOR_RGBA2BGR)
+
+        // 2. Laplacian (16비트로 고주파 추출 → 8비트 정규화)
+        Imgproc.Laplacian(bgr, temp, CvType.CV_16S, 3)
+        Core.convertScaleAbs(temp, laplacian)
+
+        // 3. 원본 + Laplacian 조합 (강도 조절)
+        Core.addWeighted(bgr, 1.0, laplacian, strength, 0.0, sharpened)
+
+        // 4. RGB 범위 클리핑 (안정성 확보)
+        clipped = clipRGBRange(sharpened)
+
+        // 5. 알파 채널 복원
+        val rgbaChannels = ArrayList<Mat>()
+        Core.split(src, rgbaChannels)
+        val alpha = rgbaChannels[3].clone()
+
+        val resultChannels = ArrayList<Mat>()
+        Core.split(clipped, resultChannels)
+
+        val reorderedChannels = listOf(
+            resultChannels[2], // R
+            resultChannels[1], // G
+            resultChannels[0], // B
+            alpha              // A
+        )
+
+        Core.merge(reorderedChannels, result)
+
+        // 🔄 해제
+        alpha.release()
+        rgbaChannels.forEach { it.release() }
+        resultChannels.forEach { it.release() }
+
+        return result
+    } finally {
+        bgr.release()
+        temp.release()
+        laplacian.release()
+        sharpened.release()
+
+    }
+}
+
+
+//눈 부위가 부자연스러움
+    fun applyLaplacianSharpenSafe(src: Mat, strength: Double = 0.1): Mat {
+        val tag = "SharpEffectProcessor"
+
+        val bgr = Mat()
+        val temp = Mat()
+        val laplacian = Mat()
+        val sharpened = Mat()
+        val clipped: Mat
+        val result = Mat()
+
+        try {
+            // 1. RGBA → BGR 변환
+            Imgproc.cvtColor(src, bgr, Imgproc.COLOR_RGBA2BGR)
+
+            // 2. Laplacian (16비트로 고주파 추출 → 8비트 정규화)
+            Imgproc.Laplacian(bgr, temp, CvType.CV_16S, 3)
+            Core.convertScaleAbs(temp, laplacian)
+
+            // 3. 원본 + Laplacian 조합 (강도 조절)
+            Core.addWeighted(bgr, 1.0, laplacian, strength, 0.0, sharpened)
+
+            // 4. RGB 범위 클리핑 (안정성 확보)
+            clipped = clipRGBRange(sharpened)
+
+            // 5. 알파 채널 복원
+            val rgbaChannels = ArrayList<Mat>()
+            Core.split(src, rgbaChannels)
+            val alpha = rgbaChannels[3].clone()
+
+            val resultChannels = ArrayList<Mat>()
+            Core.split(clipped, resultChannels)
+
+            val reorderedChannels = listOf(
+                resultChannels[2], // R
+                resultChannels[1], // G
+                resultChannels[0], // B
+                alpha              // A
+            )
+
+            Core.merge(reorderedChannels, result)
+
+            // 🔄 해제
+            alpha.release()
+            rgbaChannels.forEach { it.release() }
+            resultChannels.forEach { it.release() }
+
+            return result
+        } finally {
+            bgr.release()
+            temp.release()
+            laplacian.release()
+            sharpened.release()
+            // clipped는 내부 복사 후 병합됐기 때문에 해제하지 않아도 OK
+        }
+    }
