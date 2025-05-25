@@ -55,10 +55,25 @@ git pull --rebase origin develop    # 내 커밋을 최신 develop 위에 정렬
 기능 개발이 완료되면 아래 절차로 커밋하고 원격 저장소로 푸시합니다.
 
 ```bash
-git add .                                              # 변경사항 스테이지
-git commit -m "기능 구현 설명 메시지"                  # 커밋
-git pull --rebase origin develop                       # 최신 코드 반영
-git push origin feature/기능명                         # 원격 저장소로 푸시
+# 1. 개발 시작 전에 최신 develop으로 업데이트
+git checkout develop
+git pull origin develop
+
+# 2. 기능 브랜치 생성 or 이동
+git checkout -b feature/기능명  # 또는 git checkout feature/기능명
+
+# 3. 개발 진행
+
+# 4. 기능 완료 전 최신 develop 기반으로 정리
+git checkout develop
+git pull origin develop
+git checkout feature/기능명
+git rebase develop             # 내 커밋들을 최신 develop 위로 재정렬
+
+# 5. 커밋 및 푸시
+git add .
+git commit -m "기능 구현 메시지"
+git push origin feature/기능명
 ```
 
 ---
