@@ -10,9 +10,22 @@
 매일 작업을 시작하기 전 아래 루틴을 따라 최신 코드를 반영한 상태에서 개발을 시작합니다.
 
 ```bash
-git checkout develop                # develop 브랜치로 이동
-git pull origin develop             # 최신 코드 가져오기
-git checkout -b feature/기능명      # 기능 브랜치 생성 후 개발 시작
+git checkout develop                
+git pull origin develop            
+
+# 2. 새 기능을 시작하는 경우에만 브랜치 생성
+git checkout -b feature/기능명  # (기존에 없을 때만)
+
+# 3. 이미 작업 중인 기능 브랜치가 있다면 이어서 작업
+git checkout feature/기능명
+git pull origin feature/기능명  # 다른 사람이 작업 중이라면
+
+#.3. 브랜치 네이밍 예시
+- `feature/기능명`: 새로운 기능 추가
+- `fix/버그명`: 버그 수정
+- `hotfix/긴급패치`: 배포 중 이슈 해결
+- `refactor/모듈명`: 리팩토링
+
 ```
 
 ---
